@@ -25,7 +25,7 @@ resource "azurerm_app_service_plan" "helloworld" {
 
   sku {
     tier = "Standard"
-    size = "S1"
+    size = "F1"
   }
 }
 
@@ -35,8 +35,15 @@ resource "azurerm_function_app" "helloworld" {
   resource_group_name       = "${azurerm_resource_group.helloworld.name}"
   app_service_plan_id       = "${azurerm_app_service_plan.helloworld.id}"
   storage_connection_string = "${azurerm_storage_account.helloworld.primary_connection_string}"
+  version = "2"
 
     provisioner "local-exec" {
-    command = "${var.git_enabled ? join("", list("az functionapp deployment source config-local-git --ids ", azurerm_function_app.helloworld.id)) : "true"}"
+    command = "${join("",list("az functionapp deployment source config ", " --repo-url 'https://github.com/svelango/TerraForm' --branch master --name ",azurerm_function_app.helloworld.name, " --resource-group ", azurerm_resource_group.helloworld.name) )}"
+
+  }
+
+
+    provisioner "local-exec" {
+    command = "${join("",list("az functionapp deployment source sync --name ",azurerm_function_app.helloworld.name, " --resource-group ", azurerm_resource_group.helloworld.name)) }"
   }
 }
